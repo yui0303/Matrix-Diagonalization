@@ -1,0 +1,38 @@
+# Write a Makefile of using g++ to compile Matrix.cpp, Matrix.hpp _matrix.cpp
+CC = g++
+CFLAGS = -O3 -Wall -shared -std=c++11 -fPIC
+MKLINCLUDE = -I/usr/include/mkl 
+PYINCLUDE = $(shell python3-config --includes)  $(shell python3 -m pybind11 --includes)
+PYESUFFIX = $(shell python3-config --extension-suffix)
+PYTHON = python3
+TARGET=_matrix$(PYESUFFIX)
+
+all: $(TARGET)
+
+$(TARGET): pybind.o _matrix.o _operation.o _eigen.o
+	$(CC) $(CFLAGS) -o $(TARGET) $^
+
+pybind.o: pybind.cpp
+	$(CC) $(CFLAGS) -c pybind.cpp $(PYINCLUDE)
+
+_matrix.o: _matrix.cpp _matrix.hpp
+	$(CC) $(CFLAGS) -c _matrix.cpp
+
+_operation.o: _operation.cpp _operation.hpp _matrix.hpp
+	$(CC) $(CFLAGS) -c _operation.cpp
+
+_eigen.o: _eigen.cpp _eigen.hpp _matrix.hpp
+	$(CC) $(CFLAGS) -c _eigen.cpp
+
+.PHONY: test
+test: $(TARGET)
+	# To Be continue
+	# $(PYTHON) -m pytest -v test_matrix.py
+	# rm performance.txt
+	# $(PYTHON) test_matrix.py | tee performance.txt
+	# echo "==================== environment ====================" >> performance.txt
+	# lscpu >> performance.txt
+
+.PHONY: clean
+clean:
+	rm -rf _matrix *.o *.so __pycache__ .pytest_cache
