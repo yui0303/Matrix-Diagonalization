@@ -70,7 +70,7 @@ std::ostream & operator<<(std::ostream & os, Matrix const &mat)
     {
         for (size_t j = 0; j < mat.m_ncol; ++j)
         {
-            os << mat(i, j) << " ";
+            os << std::setw(10) << std::fixed << std::setprecision(8) << std::right << mat(i, j) << " ";
         }
         os << std::endl;
     }
