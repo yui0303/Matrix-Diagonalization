@@ -4,8 +4,12 @@ CFLAGS = -O3 -Wall -shared -std=c++11 -fPIC
 MKLINCLUDE = -I/usr/include/mkl 
 PYINCLUDE = $(shell python3-config --includes)  $(shell python3 -m pybind11 --includes)
 PYESUFFIX = $(shell python3-config --extension-suffix)
+PYTESTPATH = $(shell pwd)/../test/
 PYTHON = python3
 TARGET=_matrix$(PYESUFFIX)
+
+# PYTHONPATH := 
+export PYTHONPATH := $(shell pwd):${PYTHONPATH}
 
 all: $(TARGET)
 
@@ -26,13 +30,19 @@ _eigen.o: _eigen.cpp _eigen.hpp _matrix.hpp
 
 .PHONY: test
 test: $(TARGET)
-	# To Be continue
-	# $(PYTHON) -m pytest -v test_matrix.py
+	
+	$(PYTHON) -m pytest -v ${PYTESTPATH}test.py
 	# rm performance.txt
 	# $(PYTHON) test_matrix.py | tee performance.txt
 	# echo "==================== environment ====================" >> performance.txt
 	# lscpu >> performance.txt
 
+.PHONY: demo
+demo: $(TARGET)
+	echo $(PYTHONPATH)
+	$(PYTHON) ${PYTESTPATH}test.py
+
 .PHONY: clean
 clean:
-	rm -rf _matrix *.o *.so __pycache__ .pytest_cache
+	rm -rf *.o *.so
+	rm -rf ${PYTESTPATH}__pycache__
