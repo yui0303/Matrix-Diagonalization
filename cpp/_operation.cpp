@@ -18,7 +18,7 @@ std::vector<double> subtract_vector(const std::vector<double> &a, const std::vec
     return result;
 }
 
-std::vector<double> scalar_vector(const std::vector<double> &a, double scalar)
+std::vector<double> scalar_vector(double scalar, const std::vector<double> &a)
 {
     std::vector<double> result(a.size());
     for (size_t i = 0; i < a.size(); i++) {
@@ -47,25 +47,133 @@ std::vector<double> normalize(const std::vector<double>& a)
     return result;
 }
 
+bool is_zero_vector(const std::vector<double>& a) 
+{
+    for (size_t i = 0; i < a.size(); i++) {
+        if (a[i] > EPSILON) {
+            return false;
+        }
+    }
+    return true;
+}
+
 Matrix gram_schmidt(Matrix const& mat) 
 {
     Matrix Q(mat.nrow(), mat.ncol());
     Matrix TansMat = mat.transpose();
-    std::cout<< TansMat<<std::endl;
+    size_t num_non_zero_vec = 0;
+    // bool sign = false;
     for (size_t i = 0; i < mat.ncol(); i++) {
         std::vector<double> vi = TansMat(i);
-        // std::cout<< TansMat(i)<<std::endl;
-        for(size_t j = 0; j < i; j++) {
-            //std::cout<<Q(j)<<std::endl;
+        for(size_t j = 0; j < num_non_zero_vec; j++) {
             double scalar = dot_product(TansMat(i), Q(j))/dot_product(Q(j), Q(j));
-            vi = subtract_vector(vi, scalar_vector(Q(j), scalar));
+            vi = subtract_vector(vi, scalar_vector(scalar, Q(j)));
         }
+        if(!is_zero_vector(vi)) {
+            vi = normalize(vi);
+            for(size_t j = 0; j < vi.size(); j++) {
+                Q(num_non_zero_vec, j) = vi[j];
+            }
+            ++num_non_zero_vec;
+        }
+        // else sign = true;
+    }
+    // if(sign) {
+    //     throw std::runtime_error("Warning: The matrix is not full rank!");
+    // }
+    // std::cout<<"num_non_zero_vec: "<<num_non_zero_vec<<std::endl;
+    //std::cout<<Q<<std::endl;
+    std::vector<std::vector<double>> null_vecs = null_space(Q, num_non_zero_vec);
+    
+    for (size_t i=num_non_zero_vec; i<mat.ncol(); i++) {
+        std::vector<double> vi = null_vecs[i-num_non_zero_vec];
         vi = normalize(vi);
-        for(size_t j = 0; j < vi.size(); j++) {
+        for (size_t j=0; j<mat.nrow(); j++) {
             Q(i, j) = vi[j];
         }
     }
     return Q.transpose();
+}
+
+std::vector<std::vector<double>> null_space(Matrix const& mat, size_t valid_row)
+{
+    // Step 1: Create an augmented matrix [A|0]
+    Matrix augmented_mat(valid_row, mat.ncol() * 2);
+    for (size_t i = 0; i < valid_row; i++) {
+        for (size_t j = 0; j < mat.ncol(); j++) {
+            augmented_mat(i, j) = mat(i, j);
+        }
+    }
+    // std::cout<<"augmented_mat: \n"<<augmented_mat<<std::endl;
+    // std::cout<<"pass1"<<std::endl;
+    // Step 2: Perform Gaussian elimination
+    size_t lead = 0;
+    for (size_t r = 0; r < valid_row; r++) {
+        if (lead >= mat.ncol())
+            return {};
+        size_t i = r;
+        while (augmented_mat(i, lead) == 0) {
+            i++;
+            if (i == valid_row) {
+                i = r;
+                lead++;
+                if (mat.ncol() == lead)
+                    return {};
+            }
+        }
+        // Swap rows i and r
+        for (size_t j = 0; j < augmented_mat.ncol(); j++) {
+            std::swap(augmented_mat(i, j), augmented_mat(r, j));
+        }
+        auto lv = augmented_mat(r, lead);
+        for (size_t j = 0; j < augmented_mat.ncol(); j++) {
+            augmented_mat(r, j) /= lv;
+        }
+        for (size_t i = 0; i < valid_row; i++) {
+            if (i != r) {
+                auto sub = augmented_mat(i, lead);
+                for (size_t j = 0; j < augmented_mat.ncol(); j++) {
+                    augmented_mat(i, j) -= (augmented_mat(r, j) * sub);
+                }
+            }
+        }
+        lead++;
+    }
+    // std::cout<<"pass2"<<std::endl;
+    // Step 3: Identify pivot columns
+    std::vector<bool> isPivot(mat.ncol(), false);
+    for (size_t i = 0; i < valid_row; i++) {
+        for (size_t j = 0; j < mat.ncol(); j++) {
+            if (augmented_mat(i, j) != 0) {
+                isPivot[j] = true;
+                break;
+            }
+        }
+    }
+
+    // Step 4: Solve the system for each free variable
+
+    std::vector<std::vector<double>> null_space_vectors;
+    for (size_t i = 0; i < isPivot.size(); i++) {
+        if (!isPivot[i]) {
+            std::vector<double> special_solution(mat.ncol(), 0);
+            special_solution[i] = 1;
+            for (size_t r = 0; r < valid_row; r++) {
+                if (augmented_mat(r, i) != 0) {
+                    special_solution[r] = -augmented_mat(r, i);
+                }
+            }
+            null_space_vectors.push_back(special_solution);
+        }
+    }
+
+    // Return the null space
+    return null_space_vectors;
+}
+
+Matrix householder(Matrix const& mat)
+{
+    return Matrix(0, 0);
 }
 
 //function to multiply two matrix m*n & n*p with tile size and m, n, p are all multiples of tile size
