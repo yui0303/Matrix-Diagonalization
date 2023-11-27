@@ -11,7 +11,7 @@ PYBIND11_MODULE(_matrix, m) {
         .def(py::init<size_t, size_t>())
         .def(py::init<size_t, size_t, std::vector<double> const &>())
         .def(py::init<Matrix const&>())
-        .def("__getitem__", [](Matrix &mat, std::pair<size_t, size_t> index) -> double{
+        .def("__getitem__", [](Matrix &mat, std::pair<size_t, size_t> index){
             return mat(index.first, index.second);
         })
         .def("__setitem__", [](Matrix &mat, std::pair<size_t, size_t> index, double val){
@@ -23,11 +23,15 @@ PYBIND11_MODULE(_matrix, m) {
             os << mat;
             return os.str();
         }) 
+        .def("__mul__", [](Matrix &mat1, Matrix &mat2){
+            return mat1 * mat2;
+        })
+        .def("transpose", &Matrix::transpose)
         .def_property_readonly("nrow", &Matrix::nrow)
         .def_property_readonly("ncol", &Matrix::ncol)
         ;
     m.def("multiply_tile", &multiply_tile);
     m.def("multiply_naive", &multiply_naive);
-    m.def("QR_decomposition", &QR_decomposition);
+    m.def("QR_decomposition", &QR_decomposition_GS);
     // m.def("multiply_mkl", &multiply_mkl);
 }
