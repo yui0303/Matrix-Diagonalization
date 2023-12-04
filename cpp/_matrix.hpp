@@ -8,9 +8,6 @@
 #include <utility>
 #include <iomanip>
 
-// #include <pybind11/pybind11.h>
-// #include <pybind11/stl.h>
-
 class Matrix {
 
 public:
@@ -22,7 +19,6 @@ public:
     double   operator() (size_t row, size_t col) const; //getter
     double & operator() (size_t row, size_t col); //setter
     std::vector<double>   operator() (size_t row) const; //getter
-    // std::vector<double> & operator() (size_t row); //setter
     bool operator==(Matrix const & mat) const;
 
     //Matrix & operator+(Matrix const & mat);
@@ -39,7 +35,6 @@ public:
     size_t ncol() const;
 
 private:
-
     size_t m_nrow;
     size_t m_ncol;
     double * m_buffer;
