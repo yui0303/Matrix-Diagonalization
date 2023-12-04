@@ -30,16 +30,11 @@ _eigen.o: _eigen.cpp _eigen.hpp _matrix.hpp
 
 .PHONY: test
 test: $(TARGET)
-	
 	$(PYTHON) -m pytest -v ${PYTESTPATH}test.py
-	# rm performance.txt
-	# $(PYTHON) test_matrix.py | tee performance.txt
-	# echo "==================== environment ====================" >> performance.txt
-	# lscpu >> performance.txt
 
 .PHONY: demo
 demo: $(TARGET)
-	echo $(PYTHONPATH)
+	# echo $(PYTHONPATH)
 	$(PYTHON) ${PYTESTPATH}test.py
 
 .PHONY: clean
