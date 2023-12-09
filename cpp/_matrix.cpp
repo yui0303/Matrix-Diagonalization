@@ -1,51 +1,47 @@
 #include "_matrix.hpp"
 
-Matrix::Matrix(size_t nrow, size_t ncol) : m_nrow(nrow), m_ncol(ncol)
-{
-    size_t nelement = nrow * ncol;
-    m_buffer = new double[nelement];
-    for (size_t i=0; i<nelement; ++i)
-    {
-        m_buffer[i] = 0;
-    }
-}
-
-Matrix::Matrix(size_t nrow, size_t ncol, std::vector<double> const & vec) : m_nrow(nrow), m_ncol(ncol)
-{
-    if (vec.size() != nrow * ncol)
-    {
-        throw std::out_of_range("Matrix::Matrix(): vector size differs from matrix size");
-    }
-
-    m_buffer = new double[nrow * ncol];
-
-    for (size_t i=0; i<nrow; ++i)
-    {
-        for (size_t j=0; j<ncol; ++j)
-        {
-            m_buffer[i*ncol + j] = vec[i*ncol + j];
-        }
-    }
-
-}
-
-Matrix::Matrix(Matrix const &mat) : m_nrow(mat.m_nrow), m_ncol(mat.m_ncol)
-{
-    m_buffer = new double[m_nrow * m_ncol];
-    std::copy(mat.m_buffer, mat.m_buffer + m_nrow * m_ncol, m_buffer);
-}
-
 Matrix & Matrix::operator=(Matrix const & mat)
 {
-    m_nrow = mat.nrow();
-    m_ncol = mat.ncol();
-    m_buffer = new double[m_nrow * m_ncol];
-
-    for (size_t i=0; i<m_nrow; ++i)
+    if (this == &mat) return *this;
+    if (this->m_ncol != mat.m_ncol || this->m_nrow != mat.m_nrow)
     {
-        for (size_t j=0; j<m_ncol; ++j)
+        reset_buffer(mat.m_nrow, mat.m_ncol);
+    }
+
+    for (size_t i = 0; i < mat.m_nrow; ++i)
+    {
+        for (size_t j = 0; j < mat.m_ncol; ++j)
         {
-            m_buffer[i*m_ncol + j] = mat(i,j);
+            this->m_buffer[i*m_nrow+j] = mat(i, j);
+        }
+    }
+    
+    return *this;
+}
+
+Matrix & Matrix::operator=(Matrix && mat)
+{
+    if (this == &mat) return *this;
+    reset_buffer(0, 0);
+    std::swap(this->m_ncol, mat.m_ncol);
+    std::swap(this->m_nrow, mat.m_nrow);
+    std::swap(this->m_buffer, mat.m_buffer);
+    return *this;
+}
+
+Matrix & Matrix::operator=(std::vector<double> const & vec)
+{
+    if (vec.size() != m_nrow * m_ncol)
+    {
+        throw std::out_of_range("Matrix::operator=: vector size differs from matrix size");
+    }
+
+    size_t k = 0;
+    for (size_t i = 0; i < m_nrow; ++i)
+    {
+        for (size_t j = 0; j < m_ncol; ++j)
+        {
+            m_buffer[i*m_nrow+j] = vec[k++];
         }
     }
     return *this;
@@ -78,7 +74,7 @@ std::ostream & operator<<(std::ostream & os, Matrix const &mat)
 }
 
 
-double   Matrix::operator() (size_t row, size_t col) const
+double Matrix::operator() (size_t row, size_t col) const
 {
     //add the boundary check
     if (row >= m_nrow || col >= m_ncol)
@@ -116,7 +112,7 @@ std::vector<double> Matrix::operator() (size_t row) const
     return vec;
 }
 
-Matrix & Matrix::operator*(Matrix const & mat)
+Matrix & Matrix::operator*(Matrix const & mat) const
 {
     if (m_ncol != mat.m_nrow)
     {
@@ -163,6 +159,61 @@ Matrix & Matrix::operator*(std::vector<double> const & vec)
     return *result;
 }
 
+Matrix & Matrix::operator*(double scalar) const
+{
+    Matrix *result = new Matrix(m_nrow, m_ncol);
+
+    for (size_t i=0; i<m_nrow; ++i)
+    {
+        for (size_t j=0; j<m_ncol; ++j)
+        {
+            (*result)(i, j) = (*this)(i, j) * scalar;
+        }
+    }
+
+    return *result;
+}
+
+Matrix & Matrix::operator+(Matrix const & mat) const
+{
+    if (m_ncol != mat.m_ncol || m_nrow != mat.m_nrow)
+    {
+        throw std::out_of_range("Matrix::operator+: matrix dimensions differ");
+    }
+
+    Matrix *result = new Matrix(m_nrow, m_ncol);
+
+    for (size_t i=0; i<m_nrow; ++i)
+    {
+        for (size_t j=0; j<m_ncol; ++j)
+        {
+            (*result)(i, j) = (*this)(i, j) + mat(i, j);
+        }
+    }
+
+    return *result;
+}
+
+Matrix & Matrix::operator-(Matrix const & mat) const
+{
+    if (m_ncol != mat.m_ncol || m_nrow != mat.m_nrow)
+    {
+        throw std::out_of_range("Matrix::operator-: matrix dimensions differ");
+    }
+
+    Matrix *result = new Matrix(m_nrow, m_ncol);
+
+    for (size_t i=0; i<m_nrow; ++i)
+    {
+        for (size_t j=0; j<m_ncol; ++j)
+        {
+            (*result)(i, j) = (*this)(i, j) - mat(i, j);
+        }
+    }
+
+    return *result;
+}
+
 Matrix Matrix::transpose() const
 {
     Matrix result(m_ncol, m_nrow);
@@ -176,16 +227,6 @@ Matrix Matrix::transpose() const
     }
 
     return result;
-}
-
-double* Matrix::data() const { return m_buffer; }
-
-size_t Matrix::nrow() const { return m_nrow; }
-size_t Matrix::ncol() const { return m_ncol; }
-
-Matrix::~Matrix()
-{
-    delete[] m_buffer;
 }
 
 //operator overloading for vector
