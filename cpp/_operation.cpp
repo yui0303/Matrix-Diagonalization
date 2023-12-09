@@ -76,13 +76,8 @@ Matrix gram_schmidt(Matrix const& mat)
             }
             ++num_non_zero_vec;
         }
-        // else sign = true;
     }
-    // if(sign) {
-    //     throw std::runtime_error("Warning: The matrix is not full rank!");
-    // }
-    // std::cout<<"num_non_zero_vec: "<<num_non_zero_vec<<std::endl;
-    //std::cout<<Q<<std::endl;
+
     std::vector<std::vector<double>> null_vecs = null_space(Q, num_non_zero_vec);
     
     for (size_t i=num_non_zero_vec; i<mat.ncol(); i++) {
@@ -171,9 +166,27 @@ std::vector<std::vector<double>> null_space(Matrix const& mat, size_t valid_row)
     return null_space_vectors;
 }
 
-Matrix householder(Matrix const& mat)
+Matrix householder(std::vector<double>& x, size_t n, size_t e)
 {
-    return Matrix(0, 0);
+    // x = x - ||x||e
+    x[e] = x[e] - sqrt(dot_product(x, x));
+
+    // x/||x||
+    x = normalize(x);
+
+    Matrix H = Matrix::Identity(n, n);
+    
+    for (size_t i = 0; i < n; ++i)
+    {
+        for (size_t j = 0; j < n; j++)
+        {
+            H(i, j) = H(i, j) - x[i] * x[j] * 2;
+        }
+    }
+    // h = householder matrix = I - 2 * vvt
+    
+
+    return H;
 }
 
 //function to multiply two matrix m*n & n*p with tile size and m, n, p are all multiples of tile size
@@ -201,13 +214,13 @@ Matrix multiply_tile(Matrix const& mat1, Matrix const& mat2, size_t tsize)
                 for (size_t ii = i; ii < std::min(i + tsize, m); ++ii)
                 {
                     for (size_t jj = j; jj < std::min(j + tsize, n); ++jj) 
-		    {
-		    	double sum = .0;
+		            {
+		    	        double sum = .0;
                         for (size_t kk = k; kk < std::min(k + tsize, p); ++kk)
                         {
                             sum += mat1(ii, kk) * mat2(kk, jj);
                         }
-			result(ii, jj) += sum;
+			            result(ii, jj) += sum;
                     }
                 }
             }
@@ -233,12 +246,12 @@ Matrix multiply_naive(Matrix const& mat1, Matrix const& mat2)
     {
         for (size_t j = 0; j < mat2.ncol(); ++j)
         {
-	    double sum = .0;
+	        double sum = .0;
             for (size_t k = 0; k < mat1.ncol(); ++k)
             {
                 sum += mat1(i, k) * mat2(k, j);
             }
-	    result(i, j) = sum;
+	        result(i, j) = sum;
         }
     }
 
