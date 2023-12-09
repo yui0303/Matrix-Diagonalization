@@ -127,6 +127,5 @@ def benchmark():
         wrapper(size, np_A, A)
         
 if __name__ == "__main__":
-    # test_base_qr()
-    # benchmark()
-    test_eigenvalue()
+    test_base_qr()
+    benchmark()
