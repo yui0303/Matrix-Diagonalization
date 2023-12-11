@@ -2,9 +2,12 @@
 all: 
 	cd cpp && make && cd ..
 
-.PHONY: test
+.PHONY: test demo
 test:
 	cd cpp && make test && cd ..
+
+demo:
+	cd cpp && make demo && cd ..
 
 .PHONY: clean
 clean:

@@ -20,26 +20,21 @@ pybind.o: pybind.cpp
 	$(CC) $(CFLAGS) -c pybind.cpp $(PYINCLUDE)
 
 _matrix.o: _matrix.cpp _matrix.hpp
-	$(CC) $(CFLAGS) -c _matrix.cpp
+	$(CC) $(CFLAGS) -c _matrix.cpp $(PYINCLUDE)
 
 _operation.o: _operation.cpp _operation.hpp _matrix.hpp
-	$(CC) $(CFLAGS) -c _operation.cpp
+	$(CC) $(CFLAGS) -c _operation.cpp $(PYINCLUDE)
 
 _eigen.o: _eigen.cpp _eigen.hpp _matrix.hpp
-	$(CC) $(CFLAGS) -c _eigen.cpp
+	$(CC) $(CFLAGS) -c _eigen.cpp $(PYINCLUDE)
 
 .PHONY: test
 test: $(TARGET)
-	
 	$(PYTHON) -m pytest -v ${PYTESTPATH}test.py
-	# rm performance.txt
-	# $(PYTHON) test_matrix.py | tee performance.txt
-	# echo "==================== environment ====================" >> performance.txt
-	# lscpu >> performance.txt
 
 .PHONY: demo
 demo: $(TARGET)
-	echo $(PYTHONPATH)
+	# echo $(PYTHONPATH)
 	$(PYTHON) ${PYTESTPATH}test.py
 
 .PHONY: clean
