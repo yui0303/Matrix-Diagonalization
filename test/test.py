@@ -1,17 +1,21 @@
+import sys
+sys.path.append("../python")
+
 import _matrix
 import numpy as np
 import time
+from utils import *
+
 
 def IsEqual(ANS, M, eps=1e-6):
-    if ANS.nrow != M.nrow or ANS.ncol != M.ncol:
+    try:
+        return np.allclose(np.array(ANS), np.array(M), atol=eps)
+    except:
         return False
-    for i in range(ANS.nrow):
-        for j in range(ANS.ncol):
-            if abs(ANS[i, j] - M[i, j]) > eps:
-                return False
-    return True
 
 def is_valid(A, Q, R):
+    if type(Q) != _matrix.Matrix: Q = _matrix.Matrix(Q.shape[0], Q.shape[1], Q.flatten())
+    if type(R) != _matrix.Matrix: R = _matrix.Matrix(R.shape[0], R.shape[1], R.flatten())
     assert _matrix.is_orthogonal_matrix(Q)
     assert IsEqual(A, Q*R)
     
@@ -69,9 +73,6 @@ def test_base_qr():
     np_A = 0.5 * (np_A + np_A.T)
     np_list = np_A.flatten()
     A = _matrix.Matrix(3, 3, np_list)
-    np_q, np_r = np.linalg.qr(np_A)
-    Q, R = _matrix.QR_decomposition(A)
-    is_valid(A, Q, R)
     print()
     print('-'*80, end="\n")
     print("Test Base QR Decomposition A = QR")
@@ -82,7 +83,8 @@ def test_base_qr():
         else:
             Q, R = func(A)
         end = time.time()
-        func_name = ["C++ GS", "C++ HS", "Numpy"]
+        is_valid(A, Q, R)
+        func_name = ["C++ GS", "C++ HS", "Numpy", "Custom Numpy GS", "Custom Numpy HS"]
         print("="*15 + " " + func_name[func_type] + " " + "="*15, end="\n")
         np_a = np.array(A)
         np_q = np.array(Q)
@@ -101,6 +103,8 @@ def test_base_qr():
     wrapper(_matrix.QR_decomposition, A, 0)
     wrapper(_matrix.QR_decomposition, A, 1)
     wrapper(np.linalg.qr, np_A, 2)
+    wrapper(custom_QR_decomposition_GS, np_A, 3)
+    wrapper(custom_QR_decomposition_HS, np_A, 4)
     print('-'*80, end="\n")
 
 def benchmark():
@@ -112,7 +116,8 @@ def benchmark():
         end = time.time()
         print("{:15d} {:15.4f} ".format(size, (end - start)*1000, 0), end="")
         start = time.time()
-        _, _ = _matrix.QR_decomposition(A, 2)
+        if size <= 200:
+            _, _ = _matrix.QR_decomposition(A, 2)
         end = time.time()
         print("{:15.4f}".format((end - start)*1000), end="")
         start = time.time()
@@ -121,7 +126,7 @@ def benchmark():
         print("{:15.4f}".format((end - start)*1000), end="")
         print()
 
-    size_list = [10, 50, 100, 200]
+    size_list = [10, 15, 20, 30, 50, 100, 200, 500, 1000]
     for size in size_list:
         np_A, A = create_matrix(size, size)
         wrapper(size, np_A, A)
