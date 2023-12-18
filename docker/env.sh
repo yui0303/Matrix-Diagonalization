@@ -32,10 +32,10 @@ if [ $1 == "start" ] ; then
     fi
     
 elif [ $1 == "stop" ] ; then # stop the container
-    if ! docker stop $ContainerName > /dev/null 2>&1 ; then
-        echo "There is a unexpected wrong when stop the '$ContainerName'"
-    elif [ $(docker ps | grep -w $ContainerName | wc -l) -eq 0 ] ; then
+    if [ $(docker ps | grep -w $ContainerName | wc -l) -eq 0 ] ; then
         echo "The '$ContainerName' is not running."
+    elif ! docker stop $ContainerName > /dev/null 2>&1 ; then
+        echo "There is a unexpected wrong when stop the '$ContainerName'"
     else
         echo "Stop the '$ContainerName' successfully!"
     fi
