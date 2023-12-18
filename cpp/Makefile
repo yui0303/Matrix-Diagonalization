@@ -1,5 +1,5 @@
 # Write a Makefile of using g++ to compile Matrix.cpp, Matrix.hpp _matrix.cpp
-CC = g++ -fopenmp -mcmodel=medium -march=native
+CC = g++ -fopenmp
 OMP_THREAD_NUM ?= 4
 ifeq ($(OMP_EN_VALUE),1)
 	OMP_EN = -D_OPENMP_EN_
