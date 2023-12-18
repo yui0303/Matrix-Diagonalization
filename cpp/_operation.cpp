@@ -3,6 +3,9 @@
 double dot_product(const std::vector<double>& a, const std::vector<double>& b) 
 {
     double result = 0;
+// #ifdef _OPENMP_EN_
+//     #pragma omp parallel for reduction(+:result) num_threads(NUM_THREADS)
+// #endif
     for (size_t i = 0; i < a.size(); i++) {
         result += a[i] * b[i];
     }
@@ -41,9 +44,13 @@ std::vector<double> normalize(const std::vector<double>& a)
 {
     double norm = sqrt(dot_product(a, a));
     std::vector<double> result(a.size());
+// #ifdef _OPENMP_EN_
+//     #pragma omp parallel for num_threads(NUM_THREADS)
+// #endif
     for (size_t i = 0; i < a.size(); i++) {
         result[i] = a[i] / norm;
     }
+    // transform(a.begin(), a.end(), a.begin(), [norm](double &c){ return c/norm; });
     return result;
 }
 
@@ -87,20 +94,15 @@ Matrix gram_schmidt(Matrix const& mat)
             Q(i, j) = vi[j];
         }
     }
+    
     return Q.transpose();
 }
 
 std::vector<std::vector<double>> null_space(Matrix const& mat, size_t valid_row)
 {
     // Step 1: Create an augmented matrix [A|0]
-    Matrix augmented_mat(valid_row, mat.ncol() * 2);
-    for (size_t i = 0; i < valid_row; i++) {
-        for (size_t j = 0; j < mat.ncol(); j++) {
-            augmented_mat(i, j) = mat(i, j);
-        }
-    }
-    // std::cout<<"augmented_mat: \n"<<augmented_mat<<std::endl;
-    // std::cout<<"pass1"<<std::endl;
+    Matrix augmented_mat = mat;
+    
     // Step 2: Perform Gaussian elimination
     size_t lead = 0;
     for (size_t r = 0; r < valid_row; r++) {
@@ -124,6 +126,9 @@ std::vector<std::vector<double>> null_space(Matrix const& mat, size_t valid_row)
         for (size_t j = 0; j < augmented_mat.ncol(); j++) {
             augmented_mat(r, j) /= lv;
         }
+#ifdef _OPENMP_EN_
+        #pragma omp parallel for num_threads(NUM_THREADS) schedule(dynamic)
+#endif
         for (size_t i = 0; i < valid_row; i++) {
             if (i != r) {
                 auto sub = augmented_mat(i, lead);
@@ -137,6 +142,9 @@ std::vector<std::vector<double>> null_space(Matrix const& mat, size_t valid_row)
     // std::cout<<"pass2"<<std::endl;
     // Step 3: Identify pivot columns
     std::vector<bool> isPivot(mat.ncol(), false);
+// #ifdef _OPENMP_EN_
+//     #pragma omp parallel for num_threads(NUM_THREADS) schedule(dynamic)
+// #endif
     for (size_t i = 0; i < valid_row; i++) {
         for (size_t j = 0; j < mat.ncol(); j++) {
             if (augmented_mat(i, j) != 0) {
@@ -147,7 +155,6 @@ std::vector<std::vector<double>> null_space(Matrix const& mat, size_t valid_row)
     }
 
     // Step 4: Solve the system for each free variable
-
     std::vector<std::vector<double>> null_space_vectors;
     for (size_t i = 0; i < isPivot.size(); i++) {
         if (!isPivot[i]) {
@@ -175,9 +182,14 @@ Matrix householder(std::vector<double>& x, size_t n, size_t e)
     x = normalize(x);
 
     Matrix H = Matrix::Identity(n, n);
-    
+// #ifdef _OPENMP_EN_
+//     #pragma omp parallel for num_threads(NUM_THREADS)
+// #endif
     for (size_t i = 0; i < n; ++i)
     {
+//  #ifdef _OPENMP_EN_
+//         #pragma omp parallel for num_threads(NUM_THREADS)
+//  #endif
         for (size_t j = 0; j < n; j++)
         {
             H(i, j) = H(i, j) - x[i] * x[j] * 2;
@@ -197,7 +209,41 @@ Matrix multiply_tile(Matrix const& mat1, Matrix const& mat2, size_t tsize)
     {
         throw std::out_of_range("invalid matrix dimensions for multiplication");
     }
-
+    Matrix result(mat1.nrow(), mat2.ncol());
+    const size_t m = mat1.nrow();
+    const size_t n = mat2.ncol();
+    const size_t p = mat1.ncol();
+    // Divide the matrices into tiles of size tile_m x tile_n and tile_n x tile_p.
+    size_t i, j, k, ii, jj, kk;
+    double sum;
+#ifdef _OPENMP_EN_
+    #pragma omp parallel for private(i, j, k, ii, jj ,kk ,sum) collapse(2) num_threads(NUM_THREADS)
+#endif
+    for (i = 0; i < m; i += tsize)
+    {
+        for (j = 0; j < n; j += tsize)
+        {
+            for (k = 0; k < p; k += tsize)
+            {
+                size_t upper_i = std::min(i + tsize, m);
+                size_t upper_j = std::min(j + tsize, n);
+                size_t upper_k = std::min(k + tsize, p);
+                for (ii = i; ii < upper_i ; ++ii)
+                {
+                    for (jj = j; jj < upper_j ; ++jj) 
+                    {
+                        sum = .0;
+                        for (kk = k; kk < upper_k; ++kk)
+                        {
+                            sum += mat1(ii, kk) * mat2(kk, jj);
+                        }
+                        result(ii, jj) += sum;
+                    }
+                }
+            }
+        }
+    }
+    /*
     // Create a new matrix to store the result of the multiplication.
     Matrix result(mat1.nrow(), mat2.ncol());
     size_t m = mat1.nrow();
@@ -226,6 +272,7 @@ Matrix multiply_tile(Matrix const& mat1, Matrix const& mat2, size_t tsize)
             }
         }
     }
+    */
 
     return result;
 }

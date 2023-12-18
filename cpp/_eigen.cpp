@@ -14,28 +14,36 @@ std::pair<Matrix, Matrix> QR_decomposition_wrapper(Matrix const& mat, int type)
 std::pair<Matrix, Matrix> QR_decomposition_GS(Matrix const& mat)
 {
     Matrix Q = gram_schmidt(mat);
-    Matrix R = Q.transpose() * mat;
+    // Matrix R = Q.transpose() * mat;
+    Matrix R = multiply_tile(Q.transpose() , mat, 32);
     return {Q, R};
 }
 
 std::pair<Matrix, Matrix> QR_decomposition_HS(Matrix const& mat)
 {
-    Matrix Q = Matrix::Identity(mat.nrow(), mat.ncol());
-    Matrix R = mat;
-    Matrix H;
+    Matrix Q = Matrix::Identity(mat.nrow(), mat.ncol()), R = mat, H;
+    
+    //use 2D matrix to store the vectors, which is more cache friendly for parallel computing
+    std::vector<std::vector<double>> vv(mat.ncol(), std::vector<double>(mat.nrow()));
+    
     for (size_t i = 0; i<mat.ncol()-1; ++i) 
     {
-        std::vector<double> v(mat.nrow());
-        for (size_t j = 0; j<mat.nrow(); ++j) 
+        size_t j;
+
+#ifdef _OPENMP_EN_
+        // std::cout<<NUM_THREADS<<std::endl;
+        #pragma omp parallel for num_threads(NUM_THREADS)
+#endif
+        for (j = i; j<mat.nrow(); ++j) 
         {
-            if (j >= i)
-                v[j] = R(j, i);
-            else
-                v[j] = 0;
+            vv[i][j] = R(j, i);
         }
-        H = householder(v, mat.nrow(), i);
-        R = H * R;
-        Q = Q * H;
+        H = householder(vv[i], mat.nrow(), i);
+        // use multiply_tile to improve cache hit rate & palallel computing
+        R = multiply_tile(H, R, 32);
+        //R = H * R;
+        Q = multiply_tile(Q, H, 32);
+        //Q = Q * H;
     }
     return {Q, R};    
 }

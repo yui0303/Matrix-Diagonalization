@@ -12,6 +12,10 @@ constexpr double EPSILON = 0.000001;
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 
+#ifdef _OPENMP
+    #include <omp.h>
+#endif
+
 namespace py = pybind11;
 
 class Matrix {
