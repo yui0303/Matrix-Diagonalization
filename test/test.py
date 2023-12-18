@@ -20,6 +20,7 @@ def is_valid(A, Q, R):
     assert IsEqual(A, Q*R)
     
 def create_matrix(nrow, ncol) -> (np.ndarray, _matrix.Matrix):
+    np.random.seed(0)
     # create symmetric matrix
     np_A = np.random.rand(nrow, ncol)
     # np_A = 0.5 * (np_A + np_A.T)
