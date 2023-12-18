@@ -57,7 +57,7 @@ std::vector<double> normalize(const std::vector<double>& a)
 bool is_zero_vector(const std::vector<double>& a) 
 {
     for (size_t i = 0; i < a.size(); i++) {
-        if (a[i] > EPSILON) {
+        if (abs(a[i]) > EPSILON) {
             return false;
         }
     }
@@ -142,9 +142,9 @@ std::vector<std::vector<double>> null_space(Matrix const& mat, size_t valid_row)
     // std::cout<<"pass2"<<std::endl;
     // Step 3: Identify pivot columns
     std::vector<bool> isPivot(mat.ncol(), false);
-// #ifdef _OPENMP_EN_
-//     #pragma omp parallel for num_threads(NUM_THREADS) schedule(dynamic)
-// #endif
+#ifdef _OPENMP_EN_
+    #pragma omp parallel for num_threads(NUM_THREADS)
+#endif
     for (size_t i = 0; i < valid_row; i++) {
         for (size_t j = 0; j < mat.ncol(); j++) {
             if (augmented_mat(i, j) != 0) {
