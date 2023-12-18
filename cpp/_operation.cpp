@@ -93,12 +93,13 @@ Matrix gram_schmidt(Matrix const& mat)
 std::vector<std::vector<double>> null_space(Matrix const& mat, size_t valid_row)
 {
     // Step 1: Create an augmented matrix [A|0]
-    Matrix augmented_mat(valid_row, mat.ncol() * 2);
-    for (size_t i = 0; i < valid_row; i++) {
-        for (size_t j = 0; j < mat.ncol(); j++) {
-            augmented_mat(i, j) = mat(i, j);
-        }
-    }
+    Matrix augmented_mat = mat;
+    // Matrix augmented_mat(valid_row, mat.ncol() * 2);
+    // for (size_t i = 0; i < valid_row; i++) {
+    //     for (size_t j = 0; j < mat.ncol(); j++) {
+    //         augmented_mat(i, j) = mat(i, j);
+    //     }
+    // }
     // std::cout<<"augmented_mat: \n"<<augmented_mat<<std::endl;
     // std::cout<<"pass1"<<std::endl;
     // Step 2: Perform Gaussian elimination
