@@ -20,11 +20,9 @@ jobs:
                 sudo apt-get -q update
                 sudo apt-get -qy install \
                     curl build-essential make \
-                    gcc g++ intel-mkl-full \
+                    gcc g++ \
                     python3 python3-pip python3-pytest \
-                    python3-numpy python3-scipy python3-pandas
-                python3 -m pip install --upgrade pip
-                pip install pytest pytest-cov pybind11
+                    python3-numpy python3-scipy
             - name: Test
               run: |
                 make test
