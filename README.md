@@ -1,6 +1,12 @@
 # DoSM
 
-[![CI / Ubuntu-22.04](https://github.com/yui0303/Matrix-Diagonalization/actions/workflows/tests.yml/badge.svg)](https://github.com/yui0303/Matrix-Diagonalization/actions/workflows/tests.yml)
+[![CI](https://github.com/yui0303/Matrix-Diagonalization/actions/workflows/tests.yml/badge.svg)](https://github.com/yui0303/Matrix-Diagonalization/actions/workflows/tests.yml)
+
+## Features
+
+- Implement QR decomposition using two approaches, Gram-Schmidt and Householder.
+- Pure c++
+- Wrapping the implementation of c++ into python using Pybind11
 
 ## Build the Environment
 
@@ -29,4 +35,9 @@ make test
 - Demo the project
 ```
 make demo
+```
+- Export to `PYTHONPATH`
+```bash
+export MATRIX_PATH=/path/to/cpp
+export PYTHONPATH=${MATRIX_PATH}:${PYTHONPATH}
 ```
