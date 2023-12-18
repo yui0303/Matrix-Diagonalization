@@ -109,7 +109,7 @@ def test_base_qr():
 
 def benchmark():
     print("QR Decomposition Benchmark")
-    print("{:>15s} {:>15s} {:>15s} {:>15s}".format("Size", "C++ GS", "C++ HS", "Numpy"))
+    print("{:>15s} {:>15s} {:>15s} {:>15s} {:>20s} {:>20s}".format("Size", "C++ GS", "C++ HS", "Numpy", "Custom Numpy GS", "Custom Numpy HS"))
     def wrapper(size, np_A, A):
         start = time.time()
         _, _ = _matrix.QR_decomposition(A)
@@ -124,6 +124,15 @@ def benchmark():
         _, _ = np.linalg.qr(np_A)
         end = time.time()
         print("{:15.4f}".format((end - start)*1000), end="")
+        start = time.time()
+        _, _ = custom_QR_decomposition_GS(np_A)
+        end = time.time()
+        print("{:20.4f}".format((end - start)*1000), end="")
+        start = time.time()
+        if size <= 200:
+            _, _ = custom_QR_decomposition_HS(np_A)
+        end = time.time()
+        print("{:20.4f}".format((end - start)*1000), end="")
         print()
 
     size_list = [10, 15, 20, 30, 50, 100, 200, 500, 1000]
