@@ -15,6 +15,9 @@ jobs:
         runs-on: ubuntu-22.04
         steps:
             - uses: actions/checkout@v2
+            - name: list device info
+              run: |
+                lscpu
             - name: Install minimal prerequisites
               run: |
                 sudo apt-get -q update
