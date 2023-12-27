@@ -27,4 +27,23 @@ jobs:
             - name: Test
               run: |
                 make test
-                make demo
+            - name: Demo Thread 1
+              run: |
+                make clean
+                make OMP_THREAD_NUM=1
+            - name: Demo Thread 2
+              run: |
+                make clean
+                make OMP_THREAD_NUM=2
+            - name: Demo Thread 4
+              run: |
+                make clean
+                make OMP_THREAD_NUM=4
+            - name: Demo Thread 8
+              run: |
+                make clean
+                make OMP_THREAD_NUM=8
+            - name: Demo Thread 16
+              run: |
+                make clean
+                make OMP_THREAD_NUM=16
