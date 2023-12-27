@@ -30,20 +30,20 @@ jobs:
             - name: Demo Thread 1
               run: |
                 make clean
-                make OMP_THREAD_NUM=1
+                make demo OMP_THREAD_NUM=1
             - name: Demo Thread 2
               run: |
                 make clean
-                make OMP_THREAD_NUM=2
+                make demo OMP_THREAD_NUM=2
             - name: Demo Thread 4
               run: |
                 make clean
-                make OMP_THREAD_NUM=4
+                make demo OMP_THREAD_NUM=4
             - name: Demo Thread 8
               run: |
                 make clean
-                make OMP_THREAD_NUM=8
+                make demo OMP_THREAD_NUM=8
             - name: Demo Thread 16
               run: |
                 make clean
-                make OMP_THREAD_NUM=16
+                make demo OMP_THREAD_NUM=16
