@@ -27,6 +27,10 @@ jobs:
             - name: Test
               run: |
                 make test
+            - name: Demo Serial
+              run: |
+                make clean
+                make demo OMP_EN_VALUE=0
             - name: Demo Thread 1
               run: |
                 make clean
